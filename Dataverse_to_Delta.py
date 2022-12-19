@@ -10,7 +10,7 @@
 # MAGIC ## Set up
 # MAGIC 
 # MAGIC #### Create the Application, Client ID and Secret:
-# MAGIC *  Follow the directions in this tutorial to create an application registration for use in connecting to PowerApps Dataverse. Note: Sometimes the languge can be confusing as Microsoft has evolved Dataverse. You may see references to the "common data service". Dataverse is the new term. And often you'll note Dynamics 365 CRM even though you're using PowerApps and may not have the CRM app deployed. Dataverse is core to these platforms. Tutorial here: https://learn.microsoft.com/en-us/power-apps/developer/data-platform/walkthrough-register-app-azure-active-directory
+# MAGIC *  Follow the directions in this tutorial to create an application registration for use in connecting to PowerApps Dataverse. Note: Sometimes the language can be confusing as Microsoft has evolved Dataverse. You may see references to the "common data service". Dataverse is the new term. And often you'll note Dynamics 365 CRM even though you're using PowerApps and may not have the CRM app deployed. Dataverse is core to these platforms. Tutorial here: https://learn.microsoft.com/en-us/power-apps/developer/data-platform/walkthrough-register-app-azure-active-directory
 # MAGIC 
 # MAGIC #### Apply permissions to Dataverse for your Client ID (App):
 # MAGIC * With the Application Client ID you just created, following this link to apply permissions to your PowerApps instance's Dataverse dataset. https://learn.microsoft.com/en-us/power-platform/admin/manage-application-users. In my case, I applied "System Administrator" as I'm determining the least-privledge permission set, TODO.
@@ -36,10 +36,12 @@ from pyspark.sql.types import *
 
 # Retrieve secrets from our key vault.
 
-my_dv_orgName  =  dbutils.secrets.get(scope="demo-kv-scope",key="eric-demo-dataverse-org") 
-my_dv_clientId =  dbutils.secrets.get(scope="demo-kv-scope",key="eric-demo-dataverse-clientid") 
-my_dv_secret   =  dbutils.secrets.get(scope="demo-kv-scope",key="eric-demo-dataverse-secret") 
-my_ad_tenant   =  dbutils.secrets.get(scope="demo-kv-scope",key="bp-tenant-id") 
+my_dv_orgName  = dbutils.secrets.get(scope="demo-kv-scope",key="eric-demo-dataverse-org") 
+my_dv_clientId = dbutils.secrets.get(scope="demo-kv-scope",key="eric-demo-dataverse-clientid") 
+my_dv_secret   = dbutils.secrets.get(scope="demo-kv-scope",key="eric-demo-dataverse-secret") 
+my_ad_tenant   = dbutils.secrets.get(scope="demo-kv-scope",key="bp-tenant-id") 
+
+my_dv_entity   = 'contacts' #Type any endpoint entity name for export. TODO: Make dynamic with Databricks widget
 
 # COMMAND ----------
 
@@ -89,8 +91,8 @@ def call_dataverse_endpoint(endpoint):
     # Headers
     headers = {
         "Authorization": f"Bearer {my_dv_accessToken}",
-        "OData-MaxVersion": "4.0",
-        "OData-Version": "4.0",
+        #"OData-MaxVersion": "4.0",
+        #"OData-Version": "4.0",
         "Accept": "application/json",
         "Content-Type": "application/json; charset=utf-8",
         # "Prefer": "odata.include-annotations=*"
@@ -99,7 +101,7 @@ def call_dataverse_endpoint(endpoint):
     # Initial request
     response = requests.get(endpoint, headers=headers)
 
-    # Loop through the responses until the nextLink property is not present
+    # Loop through the responses until odata.nextLink is gone.
     while "@odata.nextLink" in response.json():
         # Append the data returned by the endpoint to the list
         data.extend(response.json()["value"])
@@ -124,7 +126,11 @@ def call_dataverse_endpoint(endpoint):
 
 # COMMAND ----------
 
-dict_data = call_dataverse_endpoint(f'https://{my_dv_orgName}.crm.dynamics.com/api/data/v9.2/contacts')
+dict_data = call_dataverse_endpoint(f'https://{my_dv_orgName}.crm.dynamics.com/api/data/v9.2/{my_dv_entity}')
+
+# COMMAND ----------
+
+len(dict_data)
 
 # COMMAND ----------
 
@@ -292,4 +298,8 @@ sql('USE CATALOG demos;')
 sql('CREATE DATABASE IF NOT EXISTS Dataverse;')
 
 # Create our delta table from our dataframe
-df.write.mode('overwrite').format('delta').saveAsTable('Dataverse.Contacts')
+df.write.mode('overwrite').format('delta').saveAsTable(f'Dataverse.{my_dv_entity}')
+
+# COMMAND ----------
+
+

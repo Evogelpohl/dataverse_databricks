@@ -123,18 +123,14 @@ def call_dataverse_endpoint(endpoint):
 
 # COMMAND ----------
 
-dict_data = call_dataverse_endpoint(f'https://{my_dv_orgName}.crm.dynamics.com/api/data/v9.2/{my_dv_entity}')
-
-# COMMAND ----------
-
-len(dict_data)
+list_data = call_dataverse_endpoint(f'https://{my_dv_orgName}.crm.dynamics.com/api/data/v9.2/{my_dv_entity}')
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC 
-# MAGIC ## Create a schema necessary to convert our dict object (`dict_data`) to json, dataframe.
-# MAGIC * Dynamically create the schema based off the function response (`dict_data`). The following function is provided by PawaritL on Github and I found it useful in creating the schema for json objects where you'd rather not hand-crank the definition yourself. Github gist: https://gist.github.com/PawaritL/a9d50a7b80f93013bd739255dd206a70
+# MAGIC ## Create a schema necessary to convert our dict object (`list_data`) to json, dataframe.
+# MAGIC * Dynamically create the schema based off the function response (`list_data`). The following function is provided by PawaritL on Github and I found it useful in creating the schema for json objects where you'd rather not hand-crank the definition yourself. Github gist: https://gist.github.com/PawaritL/a9d50a7b80f93013bd739255dd206a70
 # MAGIC 
 # MAGIC * `Beware!` While dynamic schema inferring functions are great, using them in production scenarios may have unintended consequences. It's best practice to define the schema needed and evolve the resulting Databricks Delta tables using its schema-evolution feature sets (e.g. Delta Live Tables)
 
@@ -261,18 +257,18 @@ def _populate_array(input_array: List,
 
 # MAGIC %md
 # MAGIC 
-# MAGIC ## Use the Dynamic Schema Generator function on our `dict_data` object and convert it a normal Databricks dataframe
+# MAGIC ## Use the Dynamic Schema Generator function on our `list_data` object and convert it a normal Databricks dataframe
 
 # COMMAND ----------
 
 # Auto create the schema as a StructType object type
-data_schema = generate_schema(input_json=dict_data[0])
+data_schema = generate_schema(input_json=list_data[0])
 
 # View the schema
 # display(data_schema)
 
 # Create a dataframe from our Dataverse API calls using the schema we just created
-df = spark.createDataFrame(data=dict_data, schema=data_schema)
+df = spark.createDataFrame(data=list_data, schema=data_schema)
 
 # Count the records in our dataframe
 df.count()

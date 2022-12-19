@@ -41,7 +41,7 @@ my_dv_clientId = dbutils.secrets.get(scope="demo-kv-scope",key="eric-demo-datave
 my_dv_secret   = dbutils.secrets.get(scope="demo-kv-scope",key="eric-demo-dataverse-secret") 
 my_ad_tenant   = dbutils.secrets.get(scope="demo-kv-scope",key="bp-tenant-id") 
 
-my_dv_entity   = 'accounts' #Type any endpoint entity name for export. TODO: Make dynamic with Databricks widget
+my_dv_entity   = 'contacts' #Type any endpoint entity name for export. TODO: Make dynamic with Databricks widget
 
 # COMMAND ----------
 

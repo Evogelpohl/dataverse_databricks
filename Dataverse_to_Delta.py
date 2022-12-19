@@ -85,7 +85,7 @@ my_dv_accessToken = get_access_token(
 # COMMAND ----------
 
 def call_dataverse_endpoint(endpoint):
-    # Empty dict
+    # Empty list
     data = []
 
     # Headers
